@@ -71,7 +71,6 @@ namespace WorkflowCore.Persistence.EntityFramework.Services
                 IQueryable<PersistedWorkflow> query = db.Set<PersistedWorkflow>()
                     .Include(wf => wf.ExecutionPointers)
                     .ThenInclude(ep => ep.ExtensionAttributes)
-                    .Include(wf => wf.ExecutionPointers)
                     .AsQueryable();
 
                 if (status.HasValue)
@@ -102,9 +101,8 @@ namespace WorkflowCore.Persistence.EntityFramework.Services
             {
                 var uid = new Guid(Id);
                 var raw = await db.Set<PersistedWorkflow>()
-                    .Include(wf => wf.ExecutionPointers)
+                    .Include(wf => wf.ExecutionPointers.Where(ep => ep.Active))
                     .ThenInclude(ep => ep.ExtensionAttributes)
-                    .Include(wf => wf.ExecutionPointers)
                     .FirstAsync(x => x.InstanceId == uid, cancellationToken);
 
                 if (raw == null)
@@ -125,9 +123,8 @@ namespace WorkflowCore.Persistence.EntityFramework.Services
             {
                 var uids = ids.Select(i => new Guid(i));
                 var raw = db.Set<PersistedWorkflow>()
-                    .Include(wf => wf.ExecutionPointers)
+                    .Include(wf => wf.ExecutionPointers.Where(ep => ep.Active))
                     .ThenInclude(ep => ep.ExtensionAttributes)
-                    .Include(wf => wf.ExecutionPointers)
                     .Where(x => uids.Contains(x.InstanceId));
 
                 return (await raw.ToListAsync(cancellationToken)).Select(i => i.ToWorkflowInstance());
@@ -141,9 +138,8 @@ namespace WorkflowCore.Persistence.EntityFramework.Services
                 var uid = new Guid(workflow.Id);
                 var existingEntity = await db.Set<PersistedWorkflow>()
                     .Where(x => x.InstanceId == uid)
-                    .Include(wf => wf.ExecutionPointers)
+                    .Include(wf => wf.ExecutionPointers.Where(ep => ep.Active))
                     .ThenInclude(ep => ep.ExtensionAttributes)
-                    .Include(wf => wf.ExecutionPointers)
                     .AsTracking()
                     .FirstAsync(cancellationToken);
 
